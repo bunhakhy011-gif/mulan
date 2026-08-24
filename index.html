@@ -132,20 +132,21 @@
 		.close-preview { width: 30px; height: 30px; border-radius: 50%; background: var(--cream); color: var(--muted); font-size: 18px; }
 		.preview-pages { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px; max-height: 55vh; overflow: auto; background: var(--cream); border-radius: 7px; }
 		.preview-page { width: 4cm; height: 2cm; flex: 0 0 4cm; padding: .15cm; background: white; color: #111; border: 1px solid #d9ded5; font: 8pt Arial, sans-serif; box-shadow: 0 3px 8px rgba(0,0,0,.08); }
-		.preview-page h1 { font: 700 8pt Arial, sans-serif; margin: 0 0 4pt; }
+		.preview-page h1 { font: 700 6pt Arial, sans-serif; letter-spacing: .02em; margin: 0 0 5pt; }
 		.preview-page .preview-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 3pt; }
-		.preview-page .preview-customer { max-width: 1.4in; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 6pt; }
-		.preview-page hr { border: 0; border-top: .5pt solid #111; margin: 4pt 0; }
-		.preview-page strong { display: block; font-size: 8pt; }
-		.preview-page small { font-size: 7pt; }
+		.preview-page .preview-customer { max-width: 1.45in; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 7pt; font-weight: 200; }
+		.preview-page hr { border: 0; border-top: .5pt solid #111; margin: 5pt 0; }
+		.preview-page strong { display: block; font-size: 10pt; }
+		.preview-page small { font-size: 8pt; margin-top: 2pt; }
 		.preview-actions { display: flex; gap: 8px; margin-top: 16px; }
 		.preview-actions button { flex: 1; padding: 13px; border-radius: 6px; font-size: 12px; }
 		.preview-cancel { background: var(--cream); color: var(--muted); }
 		.preview-print { background: var(--matcha-dark); color: white; font-weight: 700; }
 		.preview-share { display: none; background: var(--matcha-pale); color: var(--matcha-dark); font-weight: 700; }
+		.preview-pdf { display: block; background: #fff3ef; color: var(--coral); font-weight: 700; }
 		@media print {
 			@page { size: 4cm 2cm; margin: 0; }
-			body { width: 4cm; background: white; }
+			html, body { width: 4cm !important; margin: 0 !important; padding: 0 !important; background: white; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 			.app, .detail-backdrop { display: none !important; }
 			.print-stickers { display: block; }
 			.print-sticker { width: 4cm; height: 2cm; display: block; page-break-after: always; break-after: page; padding: .15cm; color: #111; font: 8pt Arial, sans-serif; }
@@ -211,7 +212,7 @@
 		<div class="preview-modal">
 			<div class="preview-head"><h2 id="preview-title">Sticker preview</h2><button class="close-preview" id="close-preview" aria-label="Close sticker preview">×</button></div>
 			<div class="preview-pages" id="preview-pages"></div>
-			<div class="preview-actions"><button class="preview-cancel" id="preview-cancel">Cancel</button><button class="preview-share" id="preview-share">Share sticker</button><button class="preview-print" id="preview-print">Print stickers</button></div>
+			<div class="preview-actions"><button class="preview-cancel" id="preview-cancel">Cancel</button><button class="preview-share" id="preview-share">Share sticker</button><button class="preview-pdf" id="preview-pdf">Share PDF</button><button class="preview-print" id="preview-print">Print stickers</button></div>
 		</div>
 	</div>
 	<div class="number-backdrop" id="number-backdrop" role="dialog" aria-modal="true" aria-labelledby="number-title">
@@ -311,6 +312,31 @@
 			}
 			try { await navigator.clipboard.writeText(text); alert("Sticker details copied. You can paste them into a message."); } catch (error) { alert(text); }
 		}
+		function pdfSafeText(value) { return value.replace(/[^\x20-\x7E]/g, "").replace(/[\\()]/g, character => `\\${character}`); }
+		function createStickerPdf() {
+			const entries = Object.values(cart).filter(entry => entry.quantity > 0);
+			const customerName = document.getElementById("customer-name").value.trim() || "Walk-in customer";
+			const pages = entries.flatMap(({ product, quantity, sugar }) => Array.from({ length: quantity }, () => {
+				const lines = [`ORDER ${orderLabel()}`, customerName, product.name, `${sugar}% sugar`].map(pdfSafeText);
+				return `BT /F1 7 Tf 10 45 Td (${lines[0]}) Tj 0 -10 Td (${lines[1]}) Tj 0 -14 Td (${lines[2]}) Tj 0 -10 Td (${lines[3]}) Tj ET`;
+			}));
+			const objects = ["<< /Type /Catalog /Pages 2 0 R >>", "", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"];
+			const pageRefs = [];
+			pages.forEach(content => { const contentNumber = objects.length + 2; objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`); const pageNumber = objects.length + 1; objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 113.386 56.693] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentNumber} 0 R >>`); pageRefs.push(`${pageNumber} 0 R`); });
+			objects[1] = `<< /Type /Pages /Kids [${pageRefs.join(" ")}] /Count ${pages.length} >>`;
+			let pdf = "%PDF-1.4\n"; const offsets = [0];
+			objects.forEach((object, index) => { offsets.push(pdf.length); pdf += `${index + 1} 0 obj\n${object}\nendobj\n`; });
+			const xref = pdf.length; pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${offsets.slice(1).map(offset => `${String(offset).padStart(10, "0")} 00000 n \n`).join("")}trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+			return new Blob([pdf], { type: "application/pdf" });
+		}
+		async function sharePdf() {
+			const file = new File([createStickerPdf()], `order-${orderNumber}.pdf`, { type: "application/pdf" });
+			if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+				try { await navigator.share({ title: `Order ${orderLabel()}`, files: [file] }); } catch (error) { if (error.name !== "AbortError") alert("PDF sharing is unavailable."); }
+				return;
+			}
+			const url = URL.createObjectURL(file); const link = document.createElement("a"); link.href = url; link.download = file.name; link.click(); URL.revokeObjectURL(url); alert("PDF downloaded. You can share the downloaded file.");
+		}
 
 		function openDetail(id) { selectedProductId = Number(id); const product = products.find(item => item.id === selectedProductId); document.getElementById("detail-product").textContent = `${product.name} · ${money(product.price)} · choose the sweetness your guest prefers.`; document.getElementById("detail-backdrop").classList.add("open"); document.getElementById("sugar-50").checked = true; }
 		function closeDetail() { document.getElementById("detail-backdrop").classList.remove("open"); selectedProductId = null; }
@@ -332,6 +358,7 @@
 		document.getElementById("preview-cancel").addEventListener("click", closePrintPreview);
 		document.getElementById("preview-print").addEventListener("click", printPreviewStickers);
 		document.getElementById("preview-share").addEventListener("click", shareSticker);
+		document.getElementById("preview-pdf").addEventListener("click", sharePdf);
 		document.getElementById("preview-backdrop").addEventListener("click", event => { if (event.target.id === "preview-backdrop") closePrintPreview(); });
 		document.getElementById("checkout").addEventListener("click", () => alert("Payment terminal ready for this order."));
 		renderMenu();
