@@ -148,7 +148,8 @@
 			@page { size: 4cm 2cm; margin: 0; }
 			html, body { width: 4cm !important; margin: 0 !important; padding: 0 !important; background: white; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 			.app, .detail-backdrop { display: none !important; }
-			.print-stickers { display: block; }
+			.print-stickers { display: block !important; visibility: visible !important; }
+			.preview-backdrop { display: none !important; }
 			.print-sticker { width: 4cm; height: 2cm; display: block; page-break-after: always; break-after: page; padding: .15cm; color: #111; font: 8pt Arial, sans-serif; }
 			.print-sticker:last-child { page-break-after: auto; break-after: auto; }
 			.print-sticker h1 { font: 700 6pt Arial, sans-serif; letter-spacing: .02em; margin: 0 0 5pt; }
@@ -290,18 +291,22 @@
 			document.getElementById("print-order").disabled = !entries.length;
 		}
 
-		function printOrder() {
+		function buildStickerMarkup() {
 			const entries = Object.values(cart).filter(entry => entry.quantity > 0);
-			if (!entries.length) return;
+			if (!entries.length) return "";
 			const customerName = escapeHtml(document.getElementById("customer-name").value.trim() || "Walk-in customer");
 			const stickers = entries.flatMap(({ product, quantity, sugar }) => Array.from({ length: quantity }, () => `<div class="print-sticker"><div class="print-heading"><h1>ORDER ${orderLabel()}</h1><span class="print-customer">${customerName}</span></div><hr><div class="print-line"><strong>${product.name}</strong><small>${sugar}% sugar</small></div></div>`));
-			const stickerMarkup = stickers.join("");
+			return stickers.join("");
+		}
+		function printOrder() {
+			const stickerMarkup = buildStickerMarkup();
+			if (!stickerMarkup) return;
 			document.getElementById("print-stickers").innerHTML = stickerMarkup;
 			document.getElementById("preview-pages").innerHTML = stickerMarkup.replaceAll("print-sticker", "preview-page").replaceAll("print-heading", "preview-heading").replaceAll("print-customer", "preview-customer");
 			document.getElementById("preview-backdrop").classList.add("open");
 		}
 		function closePrintPreview() { document.getElementById("preview-backdrop").classList.remove("open"); }
-		function printPreviewStickers() { closePrintPreview(); window.print(); }
+		function printPreviewStickers() { const stickerMarkup = buildStickerMarkup(); if (!stickerMarkup) return; document.getElementById("print-stickers").innerHTML = stickerMarkup; closePrintPreview(); window.print(); }
 		async function shareSticker() {
 			const customerName = document.getElementById("customer-name").value.trim() || "Walk-in customer";
 			const items = Object.values(cart).filter(entry => entry.quantity > 0).flatMap(({ product, quantity, sugar }) => Array.from({ length: quantity }, () => `- ${product.name} (${sugar}% sugar)`));
