@@ -152,7 +152,7 @@
 			.print-sticker h1 { font: 700 6pt Arial, sans-serif; letter-spacing: .02em; margin: 0 0 5pt; }
 			.print-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 4pt; }
 			.print-customer { max-width: 1.45in; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 7pt; font-weight: 200; }
-			.print-sticker p { margin: 0 0 6pt; font-size: 7cm; }
+			.print-sticker p { margin: 0 0 6pt; font-size: 7pt; }
 			.print-sticker hr { border: 0; border-top: .5pt solid #111; margin: 5pt 0; }
 			.print-line { margin: 6pt 0; }
 			.print-line strong { display: block; font-size: 10pt; }
@@ -160,7 +160,7 @@
 		}
 
 		@media (max-width: 920px) { .app { grid-template-columns: 70px minmax(0, 1fr); } .order-panel { grid-column: 2; min-height: auto; border-top: 1px solid var(--line); border-left: 0; } .menu-grid { grid-template-columns: repeat(3, minmax(150px, 1fr)); } }
-		@media (max-width: 600px) { .app { display: block; } .rail { height: 67px; padding: 8px 16px; flex-direction: row; justify-content: space-between; } .mark { width: 43px; height: 43px; margin: 0; font-size: 20px; } .nav { display: flex; width: auto; gap: 5px; } .nav button { padding: 7px 10px; } .nav button span { display: none; } .rail-bottom { margin: 0; } main { padding: 24px 17px 34px; } .topbar { margin-bottom: 25px; } .shift { display: none; } .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .product-image { height: 126px; } .order-panel { padding: 25px 17px; } }
+		@media (max-width: 600px) { .app { display: block; } .rail { height: 67px; padding: 8px 16px; flex-direction: row; justify-content: space-between; } .mark { width: 43px; height: 43px; margin: 0; font-size: 20px; } .nav { display: flex; width: auto; gap: 5px; } .nav button { padding: 7px 10px; } .nav button span { display: none; } .rail-bottom { margin: 0; } main { padding: 24px 17px 34px; } .topbar { margin-bottom: 25px; } .shift { display: none; } .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .product-image { height: 126px; } .order-panel { padding: 25px 17px; } .preview-backdrop { padding: 12px 8px; } .preview-modal { padding: 16px 12px; } .preview-pages { justify-content: center; padding: 12px 6px; gap: 8px; max-height: 60vh; } .preview-actions { position: sticky; bottom: 0; padding-top: 8px; background: var(--paper); } }
 	</style>
 </head>
 <body>
