@@ -135,7 +135,7 @@
 		.preview-page h1 { font: 700 22px Arial, sans-serif; letter-spacing: .02em; margin: 0 0 12px; }
 		.preview-page .preview-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 3pt; }
 		.preview-page .preview-customer { max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; font-weight: 400; }
-		.preview-page hr { border: 0; border-top: 2px solid #111; margin: 10px 0 18px; }
+		.preview-divider { height: 2px; width: 100%; background: #111; margin: 10px 0 18px; }
 		.preview-page .print-line { margin: 0; }
 		.preview-page strong { display: block; font-size: 34px; }
 		.preview-page small { display: block; font-size: 26px; margin-top: 8px; }
@@ -153,6 +153,7 @@
 			.preview-backdrop { display: none !important; }
 			.print-sticker { width: 4cm; height: 2cm; display: block; page-break-after: always; break-after: page; padding: .15cm; color: #111; font: 8pt Arial, sans-serif; }
 			.print-sticker:last-child { page-break-after: auto; break-after: auto; }
+			.print-divider { height: .5pt; width: 100%; background: #111; margin: 5pt 0; }
 			.print-sticker h1 { font: 700 6pt Arial, sans-serif; letter-spacing: .02em; margin: 0 0 5pt; }
 			.print-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 4pt; }
 			.print-customer { max-width: 1.45in; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 7pt; font-weight: 200; }
@@ -266,6 +267,7 @@
 		const search = document.getElementById("search");
 		
 		function orderLabel() { return `#MM-${String(orderNumber).padStart(4, "0")}`; }
+		function stickerOrderLabel() { return orderLabel().replace("#MM-", "#"); }
 		function renderOrderNumber() { document.getElementById("order-id").textContent = `${orderLabel()} · DINE IN`; }
 		function openNumberEditor() { document.getElementById("number-input").value = orderNumber; document.getElementById("number-backdrop").classList.add("open"); document.getElementById("number-input").focus(); }
 		function closeNumberEditor() { document.getElementById("number-backdrop").classList.remove("open"); }
@@ -296,14 +298,14 @@
 			const entries = Object.values(cart).filter(entry => entry.quantity > 0);
 			if (!entries.length) return "";
 			const customerName = escapeHtml(document.getElementById("customer-name").value.trim() || "Walk-in customer");
-			const stickers = entries.flatMap(({ product, quantity, sugar }) => Array.from({ length: quantity }, () => `<div class="print-sticker"><div class="print-heading"><h1>ORDER ${orderLabel()}</h1><span class="print-customer">${customerName}</span></div><hr><div class="print-line"><strong>${product.name}</strong><small>${sugar}% sugar</small></div></div>`));
+			const stickers = entries.flatMap(({ product, quantity, sugar }) => Array.from({ length: quantity }, () => `<div class="print-sticker"><div class="print-heading"><h1>ORDER ${stickerOrderLabel()}</h1><span class="print-customer">${customerName}</span></div><div class="print-divider"></div><div class="print-line"><strong>${product.name}</strong><small>${sugar}% sugar</small></div></div>`));
 			return stickers.join("");
 		}
 		function printOrder() {
 			const stickerMarkup = buildStickerMarkup();
 			if (!stickerMarkup) return;
 			document.getElementById("print-stickers").innerHTML = stickerMarkup;
-			document.getElementById("preview-pages").innerHTML = stickerMarkup.replaceAll("print-sticker", "preview-page").replaceAll("print-heading", "preview-heading").replaceAll("print-customer", "preview-customer");
+			document.getElementById("preview-pages").innerHTML = stickerMarkup.replaceAll("print-sticker", "preview-page").replaceAll("print-heading", "preview-heading").replaceAll("print-customer", "preview-customer").replaceAll("print-divider", "preview-divider");
 			document.getElementById("preview-backdrop").classList.add("open");
 		}
 		function closePrintPreview() { document.getElementById("preview-backdrop").classList.remove("open"); }
