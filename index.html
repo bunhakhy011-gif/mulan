@@ -142,6 +142,7 @@
 		.preview-actions button { flex: 1; padding: 13px; border-radius: 6px; font-size: 12px; }
 		.preview-cancel { background: var(--cream); color: var(--muted); }
 		.preview-print { background: var(--matcha-dark); color: white; font-weight: 700; }
+		.preview-share { display: none; background: var(--matcha-pale); color: var(--matcha-dark); font-weight: 700; }
 		@media print {
 			@page { size: 4cm 2cm; margin: 0; }
 			body { width: 4cm; background: white; }
@@ -160,7 +161,7 @@
 		}
 
 		@media (max-width: 920px) { .app { grid-template-columns: 70px minmax(0, 1fr); } .order-panel { grid-column: 2; min-height: auto; border-top: 1px solid var(--line); border-left: 0; } .menu-grid { grid-template-columns: repeat(3, minmax(150px, 1fr)); } }
-		@media (max-width: 600px) { .app { display: block; } .rail { height: 67px; padding: 8px 16px; flex-direction: row; justify-content: space-between; } .mark { width: 43px; height: 43px; margin: 0; font-size: 20px; } .nav { display: flex; width: auto; gap: 5px; } .nav button { padding: 7px 10px; } .nav button span { display: none; } .rail-bottom { margin: 0; } main { padding: 24px 17px 34px; } .topbar { margin-bottom: 25px; } .shift { display: none; } .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .product-image { height: 126px; } .order-panel { padding: 25px 17px; } .preview-backdrop { padding: 12px 8px; } .preview-modal { padding: 16px 12px; } .preview-pages { justify-content: center; padding: 12px 6px; gap: 8px; max-height: 60vh; } .preview-actions { position: sticky; bottom: 0; padding-top: 8px; background: var(--paper); } }
+		@media (max-width: 600px) { .app { display: block; } .rail { height: 67px; padding: 8px 16px; flex-direction: row; justify-content: space-between; } .mark { width: 43px; height: 43px; margin: 0; font-size: 20px; } .nav { display: flex; width: auto; gap: 5px; } .nav button { padding: 7px 10px; } .nav button span { display: none; } .rail-bottom { margin: 0; } main { padding: 24px 17px 34px; } .topbar { margin-bottom: 25px; } .shift { display: none; } .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .product-image { height: 126px; } .order-panel { padding: 25px 17px; } .preview-backdrop { padding: 12px 8px; } .preview-modal { padding: 16px 12px; } .preview-pages { justify-content: center; padding: 12px 6px; gap: 8px; max-height: 60vh; } .preview-actions { position: sticky; bottom: 0; padding-top: 8px; background: var(--paper); } .preview-share { display: block; } }
 	</style>
 </head>
 <body>
@@ -210,7 +211,7 @@
 		<div class="preview-modal">
 			<div class="preview-head"><h2 id="preview-title">Sticker preview</h2><button class="close-preview" id="close-preview" aria-label="Close sticker preview">×</button></div>
 			<div class="preview-pages" id="preview-pages"></div>
-			<div class="preview-actions"><button class="preview-cancel" id="preview-cancel">Cancel</button><button class="preview-print" id="preview-print">Print stickers</button></div>
+			<div class="preview-actions"><button class="preview-cancel" id="preview-cancel">Cancel</button><button class="preview-share" id="preview-share">Share sticker</button><button class="preview-print" id="preview-print">Print stickers</button></div>
 		</div>
 	</div>
 	<div class="number-backdrop" id="number-backdrop" role="dialog" aria-modal="true" aria-labelledby="number-title">
@@ -300,6 +301,16 @@
 		}
 		function closePrintPreview() { document.getElementById("preview-backdrop").classList.remove("open"); }
 		function printPreviewStickers() { closePrintPreview(); window.print(); }
+		async function shareSticker() {
+			const customerName = document.getElementById("customer-name").value.trim() || "Walk-in customer";
+			const items = Object.values(cart).filter(entry => entry.quantity > 0).flatMap(({ product, quantity, sugar }) => Array.from({ length: quantity }, () => `- ${product.name} (${sugar}% sugar)`));
+			const text = `ORDER ${orderLabel()}\n${customerName}\n${items.join("\n")}`;
+			if (navigator.share) {
+				try { await navigator.share({ title: `Order ${orderLabel()}`, text }); } catch (error) { if (error.name !== "AbortError") alert("Sharing was cancelled or unavailable."); }
+				return;
+			}
+			try { await navigator.clipboard.writeText(text); alert("Sticker details copied. You can paste them into a message."); } catch (error) { alert(text); }
+		}
 
 		function openDetail(id) { selectedProductId = Number(id); const product = products.find(item => item.id === selectedProductId); document.getElementById("detail-product").textContent = `${product.name} · ${money(product.price)} · choose the sweetness your guest prefers.`; document.getElementById("detail-backdrop").classList.add("open"); document.getElementById("sugar-50").checked = true; }
 		function closeDetail() { document.getElementById("detail-backdrop").classList.remove("open"); selectedProductId = null; }
@@ -320,6 +331,7 @@
 		document.getElementById("close-preview").addEventListener("click", closePrintPreview);
 		document.getElementById("preview-cancel").addEventListener("click", closePrintPreview);
 		document.getElementById("preview-print").addEventListener("click", printPreviewStickers);
+		document.getElementById("preview-share").addEventListener("click", shareSticker);
 		document.getElementById("preview-backdrop").addEventListener("click", event => { if (event.target.id === "preview-backdrop") closePrintPreview(); });
 		document.getElementById("checkout").addEventListener("click", () => alert("Payment terminal ready for this order."));
 		renderMenu();
