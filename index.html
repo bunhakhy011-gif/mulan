@@ -130,14 +130,15 @@
 		.preview-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 		.preview-head h2 { font: 700 23px "Playfair Display", serif; margin: 0; }
 		.close-preview { width: 30px; height: 30px; border-radius: 50%; background: var(--cream); color: var(--muted); font-size: 18px; }
-		.preview-pages { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px; max-height: 55vh; overflow: auto; background: var(--cream); border-radius: 7px; }
-		.preview-page { width: 4cm; height: 2cm; flex: 0 0 4cm; padding: .15cm; background: white; color: #111; border: 1px solid #d9ded5; font: 8pt Arial, sans-serif; box-shadow: 0 3px 8px rgba(0,0,0,.08); }
-		.preview-page h1 { font: 700 6pt Arial, sans-serif; letter-spacing: .02em; margin: 0 0 5pt; }
+		.preview-pages { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px; max-height: 55vh; overflow: auto; background: var(--cream); border-radius: 7px; }
+		.preview-page { width: min(100%, 460px); aspect-ratio: 2 / 1; flex: 0 0 auto; padding: 24px; background: white; color: #111; border: 1px solid #d9ded5; font: 8pt Arial, sans-serif; box-shadow: 0 3px 8px rgba(0,0,0,.08); }
+		.preview-page h1 { font: 700 22px Arial, sans-serif; letter-spacing: .02em; margin: 0 0 12px; }
 		.preview-page .preview-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 3pt; }
-		.preview-page .preview-customer { max-width: 1.45in; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 7pt; font-weight: 200; }
-		.preview-page hr { border: 0; border-top: .5pt solid #111; margin: 5pt 0; }
-		.preview-page strong { display: block; font-size: 10pt; }
-		.preview-page small { font-size: 8pt; margin-top: 2pt; }
+		.preview-page .preview-customer { max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; font-weight: 400; }
+		.preview-page hr { border: 0; border-top: 2px solid #111; margin: 10px 0 18px; }
+		.preview-page .print-line { margin: 0; }
+		.preview-page strong { display: block; font-size: 34px; }
+		.preview-page small { display: block; font-size: 26px; margin-top: 8px; }
 		.preview-actions { display: flex; gap: 8px; margin-top: 16px; }
 		.preview-actions button { flex: 1; padding: 13px; border-radius: 6px; font-size: 12px; }
 		.preview-cancel { background: var(--cream); color: var(--muted); }
@@ -327,7 +328,7 @@
 			}));
 			const objects = ["<< /Type /Catalog /Pages 2 0 R >>", "", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"];
 			const pageRefs = [];
-			pages.forEach(content => { const contentNumber = objects.length + 2; objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`); const pageNumber = objects.length + 1; objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 113.386 56.693] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentNumber} 0 R >>`); pageRefs.push(`${pageNumber} 0 R`); });
+			pages.forEach(content => { const contentNumber = objects.length + 1; objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`); const pageNumber = objects.length + 1; objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 113.386 56.693] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentNumber} 0 R >>`); pageRefs.push(`${pageNumber} 0 R`); });
 			objects[1] = `<< /Type /Pages /Kids [${pageRefs.join(" ")}] /Count ${pages.length} >>`;
 			let pdf = "%PDF-1.4\n"; const offsets = [0];
 			objects.forEach((object, index) => { offsets.push(pdf.length); pdf += `${index + 1} 0 obj\n${object}\nendobj\n`; });
